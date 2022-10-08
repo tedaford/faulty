@@ -7,7 +7,6 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
       password: ENV.fetch('POSTGRES_PASSWORD', nil),
       host: ENV.fetch('POSTGRES_HOST', nil),
       port: ENV.fetch('POSTGRES_PORT', nil),
-      socket: ENV.fetch('POSTGRES_SOCKET', nil)
     }.merge(options))
   end
 
