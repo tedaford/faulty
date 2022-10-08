@@ -5,11 +5,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     PG::Connection.new({
       user: 'postgres',
       dbname: 'postgres',
-      'faulty' => {
-        name: 'pg',
-        instance: 'test',
-        patch_errors: true
-       }.merge(options),
+      host: 'localhost',
       port: 5432
     })
   end
