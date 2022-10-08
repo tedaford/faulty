@@ -7,6 +7,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
       password: 'postgres',
       host: 'localhost',
       port: 5432,
+      dbname: 'postgres'
     }.merge(options))
   end
 
@@ -25,17 +26,17 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     end
   end
 
-  let(:client) { new_client(database: db_name, faulty: { instance: 'faulty' }) }
+  let(:client) { new_client(database: :dbname, faulty: { instance: 'faulty' }) }
   let(:bad_client) { new_client(host: '154.4.3.1', port: 9999, faulty: { instance: 'faulty' }) }
   let(:bad_unpatched_client) { new_client(host: '154.4.0.1', port: 9999) }
   let(:faulty) { Faulty.new(listeners: [], circuit_defaultts: { sample_threshold: 2 }) }
 
   before do
-    new_client.exec("CREATE DATABASE #{db_name}")
+    new_client.exec("CREATE DATABASE #{:dbname}")
   end
 
   after do
-    new_client.exec("DROP DATABASE #{db_name}")
+    new_client.exec("DROP DATABASE #{:dbname}")
   end
 
   it 'captures connection error' do
