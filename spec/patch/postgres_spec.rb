@@ -3,7 +3,7 @@
 RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
   def new_client(options = {})
     PG::Connection.new({
-      username: ENV.fetch('POSTGRES_USER', nil),
+      user: ENV.fetch('POSTGRES_USER', nil),
       password: ENV.fetch('POSTGRES_PASSWORD', nil),
       host: ENV.fetch('POSTGRES_HOST', nil),
       port: ENV.fetch('POSTGRES_PORT', nil),
