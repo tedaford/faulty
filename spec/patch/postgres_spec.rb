@@ -5,10 +5,9 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     PG::Connection.new({
       user: 'postgres',
       password: 'postgres',
-      dbname: 'postgres',
       host: 'localhost',
-      port: 5432
-    })
+      port: 5432,
+    }.merge(options))
   end
 
   def create_table(client, table_name)
@@ -27,8 +26,8 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
   end
 
   let(:client) { new_client(database: db_name, faulty: { instance: 'faulty' }) }
-  let(:bad_client) { new_client(host: '127.0.0.1', port: 9999, faulty: { instance: 'faulty' }) }
-  let(:bad_unpatched_client) { new_client(host: '127.0.0.1', port: 9999) }
+  let(:bad_client) { new_client(host: '154.4.3.1', port: 9999, faulty: { instance: 'faulty' }) }
+  let(:bad_unpatched_client) { new_client(host: '154.4.0.1', port: 9999) }
   let(:faulty) { Faulty.new(listeners: [], circuit_defaultts: { sample_threshold: 2 }) }
 
   before do
