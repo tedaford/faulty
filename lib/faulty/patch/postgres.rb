@@ -5,7 +5,7 @@ require 'pg'
 class Faulty
   module Patch
     # Patch for the Postgres gem
-    module Postgres
+    module PG
       include Base
 
       Patch.define_circuit_errors(self, ::PG::ConnectionBad)
@@ -24,7 +24,7 @@ class Faulty
             ::PG::ConnectionBad,
             ::PG::UnableToSend
           ],
-          patched_error_mapper: Faulty::Patch::Postgres
+          patched_error_mapper: Faulty::Patch::PG
         )
 
         super
@@ -32,7 +32,7 @@ class Faulty
 
       def ping
         faulty_run { super }
-      rescue Faulty::Patch::Postgres::FaultyError
+      rescue Faulty::Patch::PG::FaultyError
         false
       end
 
@@ -50,7 +50,7 @@ class Faulty
 end
 
 module PG
-  class Connection
-    prepend Faulty::Patch::Postgres
+  class Client
+    prepend Faulty::Patch::PG
   end
 end

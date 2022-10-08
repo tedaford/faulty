@@ -3,11 +3,11 @@
 RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
   def new_client(options = {})
     PG::Connection.new({
-      username: ENV.fetch('POSTGRES_USER', nil),
-      password: ENV.fetch('POSTGRES_PASSWORD', nil),
-      host: ENV.fetch('POSTGRES_HOST', nil),
-      port: ENV.fetch('POSTGRES_PORT', nil),
-      socket: ENV.fetch('POSTGRES_SOCKET', nil)
+      user: 'postgres',
+      password: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      dbname: 'postgres'
     }.merge(options))
   end
 
@@ -26,29 +26,29 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     end
   end
 
-  let(:client) { new_client(database: db_name, faulty: { instance: 'faulty' }) }
-  let(:bad_client) { new_client(host: '127.0.0.1', port: 9999, faulty: { instance: 'faulty' }) }
-  let(:bad_unpatched_client) { new_client(host: '127.0.0.1', port: 9999) }
-  let(:faulty) { Faulty.new(listeners: [], circuit_defaultts: { sample_threshold: 2 }) }
+  let(:client) { new_client( faulty: { instance: 'faulty' }) }
+  let(:bad_client) { new_client(host: '154.4.3.1', port: 9999, faulty: { instance: 'faulty' }) }
+  let(:bad_unpatched_client) { new_client(host: '154.4.0.1', port: 9999) }
+  let(:faulty) { Faulty.new(listeners: [], circuit_defaults: { sample_threshold: 2 }) }
 
   before do
-    new_client.exec("CREATE DATABASE #{db_name}")
+    new_client.exec("CREATE DATABASE #{:dbname}")
   end
 
   after do
-    new_client.exec("DROP DATABASE #{db_name}")
+    new_client.exec("DROP DATABASE #{:dbname}")
   end
 
   it 'captures connection error' do
     expect { bad_client.query('SELECT 1 FROM dual') }.to raise_error do |error|
-      expect(error).to be_a(Faulty::Patch::PG::ConnectionError)
-      expect(error.cause).to be_a(PG::Error::ConnectionBad)
+      expect(error).to be_a(Faulty::Patch::PG::CircuitError)
+      expect(error.cause).to be_a(PG::ConnectionBad)
     end
     expect(faulty.circuit('postgres').status.failure_rate).to eq(1)
   end
 
   it 'does not capture unpatched client errors' do
-    expect { bad_unpatched_client.query('SELECT 1 FROM dual') }.to raise_error(PG::Error::ConnectionBad)
+    expect { bad_unpatched_client.query('SELECT 1 FROM dual') }.to raise_error(PG::ConnectionBad)
     expect(faulty.circuit('postgres').status.failure_rate).to eq(0)
   end
 
@@ -66,7 +66,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
 
   it 'prevents additional queries when tripped' do
     trip_circuit
-    expect { client.query('SELECT 1 FROM dual') }.to raise_error(Faulty::Patch::PG::ConnectionError)
+    expect { client.query('SELECT 1 FROM dual') }.to raise_error(Faulty::Patch::PG::CircuitError)
   end
 
   it 'allows COMMIT when tripped' do
@@ -75,7 +75,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     client.query('INSERT INTO test VALUES(1)')
     trip_circuit
     expect { client.query('COMMIT') }.to be_nil
-    expect(client.query('SELECT * FROM test')).to raise_error(Faulty::Patch::PG::ConnectionError)
+    expect(client.query('SELECT * FROM test')).to raise_error(Faulty::Patch::PG::CircuitError)
     faulty.circuit('postgres').reset
     expect(client.query('SELECT * FROM test').to_a).to eq([{ 'id' => '1' }])
   end
@@ -86,7 +86,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
     client.query('INSERT INTO test VALUES(1)')
     trip_circuit
     expect { client.query('/* hi there */ ROLLBACK') }.to be_nil
-    expect { client.query('SELECT * FROM test') }.to raise_error(Faulty::Patch::PG::ConnectionError)
+    expect { client.query('SELECT * FROM test') }.to raise_error(Faulty::Patch::PG::CircuitError)
     faulty.circuit('postgres').reset
     expect(client.query('SELECT * FROM test').to_a).to eq([])
   end
