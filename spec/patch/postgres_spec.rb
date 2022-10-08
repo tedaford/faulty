@@ -3,11 +3,15 @@
 RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
   def new_client(options = {})
     PG::Connection.new({
-      user: ENV.fetch('POSTGRES_USER', nil),
-      password: ENV.fetch('POSTGRES_PASSWORD', nil),
-      host: ENV.fetch('POSTGRES_HOST', nil),
-      port: ENV.fetch('POSTGRES_PORT', nil),
-    }.merge(options))
+      user: 'postgres',
+      dbname: 'postgres'
+      'faulty' => {
+        name: 'pg',
+        instance: 'test',
+        patch_errors: true
+      }.merge(options)
+      port: 5432
+    })
   end
 
   def create_table(client, table_name)
