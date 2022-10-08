@@ -50,7 +50,7 @@ class Faulty
 end
 
 module PG
-  class Connection
+  class Client
     prepend Faulty::Patch::PG
   end
 end
