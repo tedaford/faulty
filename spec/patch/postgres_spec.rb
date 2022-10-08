@@ -4,6 +4,7 @@ RSpec.describe 'Faulty::Patch::Postgres', if: defined?(PG) do
   def new_client(options = {})
     PG::Connection.new({
       user: 'postgres',
+      password: 'postgres',
       dbname: 'postgres',
       host: 'localhost',
       port: 5432
